@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="朝クエスト">
+<title>朝クエスト</title>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#7EC8E3">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --sky: #7EC8E3;
+    --sky-dark: #4AA8C8;
+    --sun: #FFD166;
+    --sun-glow: #FF9F1C;
+    --green: #06D6A0;
+    --green-dark: #05A880;
+    --pink: #FF6B9D;
+    --pink-dark: #E05580;
+    --purple: #A78BFA;
+    --bg: #F0F9FF;
+    --card: #FFFFFF;
+    --text: #1E293B;
+    --muted: #94A3B8;
+    --done-bg: #F0FDF4;
+    --done-border: #86EFAC;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(160deg, var(--sky-dark) 0%, var(--sky) 60%, #A8D8EA 100%);
+    padding: 20px 20px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -16px; left: 0; right: 0;
+    height: 32px;
+    background: var(--bg);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  }
+
+  .sun {
+    position: absolute;
+    top: -24px; right: -24px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, var(--sun) 40%, var(--sun-glow) 70%, transparent 100%);
+    border-radius: 50%;
+    opacity: 0.85;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+  .greeting { font-family: 'Nunito', sans-serif; }
+  .greeting .day { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 700; letter-spacing: 0.05em; }
+  .greeting .title { font-size: 26px; color: #fff; font-weight: 900; line-height: 1.2; }
+  .greeting .title span { color: var(--sun); }
+
+  .streak-badge {
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    border-radius: 12px;
+    padding: 6px 12px;
+    text-align: center;
+  }
+  .streak-badge .num { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: var(--sun); line-height: 1; }
+  .streak-badge .label { font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 700; letter-spacing: 0.05em; }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-top: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: rgba(255,255,255,0.9);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .progress-track {
+    height: 12px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sun), var(--sun-glow));
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '⭐';
+    position: absolute;
+    right: -2px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    filter: drop-shadow(0 0 4px rgba(255,200,0,0.8));
+  }
+
+  /* ── Points banner ── */
+  .points-banner {
+    margin: 24px 16px 8px;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+    border-radius: 16px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(167,139,250,0.3);
+  }
+  .points-icon { font-size: 28px; }
+  .points-text { flex: 1; }
+  .points-text .label { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.06em; }
+  .points-text .value { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; color: #fff; line-height: 1.1; }
+  .points-text .value span { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8); }
+
+  .level-badge {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 6px 10px;
+    text-align: center;
+  }
+  .level-badge .lv { font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 700; }
+  .level-badge .lv-num { font-family: 'Nunito', sans-serif; font-size: 20px; color: var(--sun); font-weight: 900; line-height: 1; }
+
+  /* ── Section ── */
+  .section-label {
+    margin: 20px 16px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Task cards ── */
+  .task-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-card:active { transform: scale(0.97); }
+  .task-card.done {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+  }
+  .task-card.done .task-name { color: var(--muted); text-decoration: line-through; }
+  .task-card.done .task-time { color: var(--done-border); }
+
+  .task-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .task-sub {
+    display: flex;
+    gap: 8px;
+    margin-top: 3px;
+    align-items: center;
+  }
+  .task-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sky-dark);
+  }
+  .task-pts {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--purple);
+    background: #F3F0FF;
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+
+  .check-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2.5px solid #CBD5E1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    background: #fff;
+  }
+  .task-card.done .check-circle {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check-circle svg { display: none; }
+  .task-card.done .check-circle svg { display: block; }
+
+  /* shimmer on done */
+  .task-card.done::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(6,214,160,0.08) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ── Data tools ── */
+  .data-tools {
+    margin: 8px 16px 4px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .data-btn {
+    flex: 1 1 110px;
+    border: 0;
+    border-radius: 12px;
+    padding: 10px 8px;
+    background: #FFFFFF;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .data-btn:active { transform: scale(0.98); }
+  .data-btn.danger { color: #E05580; }
+
+  /* ── Timer section ── */
+  .timer-card {
+    margin: 12px 16px;
+    background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .timer-face {
+    position: relative;
+    width: 64px; height: 64px;
+    flex-shrink: 0;
+  }
+  .timer-face svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .timer-inner {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+  }
+  .timer-info { flex: 1; }
+  .timer-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 700; letter-spacing: 0.06em; }
+  .timer-next { font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px; }
+  .timer-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+  /* ── Bag check ── */
+  .bag-section { padding: 0 16px 32px; }
+  .bag-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .bag-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .bag-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+  .bag-header .badge {
+    margin-left: auto;
+    font-size: 11px; font-weight: 700;
+    color: var(--pink); background: #FFF0F7;
+    padding: 2px 8px; border-radius: 99px;
+  }
+
+  .bag-items { display: flex; flex-direction: column; gap: 8px; }
+  .bag-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #F8FAFC;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+  .bag-item.packed { background: #F0FDF4; }
+  .bag-item-name { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+  .bag-item.packed .bag-item-name { color: var(--muted); text-decoration: line-through; }
+  .bag-mini-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #CBD5E1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .bag-item.packed .bag-mini-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .bag-item-icon { font-size: 18px; }
+
+  /* ── Reward popup ── */
+  .popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .popup-overlay.show { opacity: 1; pointer-events: all; }
+
+  .popup {
+    background: #fff;
+    border-radius: 24px;
+    padding: 32px 28px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    transform: scale(0.8);
+    transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .popup-overlay.show .popup { transform: scale(1); }
+  .popup-emoji { font-size: 56px; margin-bottom: 12px; }
+  .popup-title { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; color: var(--text); }
+  .popup-pts {
+    font-family: 'Nunito', sans-serif;
+    font-size: 36px; font-weight: 900;
+    color: var(--purple);
+    margin: 6px 0;
+  }
+  .popup-msg { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .popup-btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px; font-weight: 800;
+    border: none; border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+  }
+
+  /* ── Complete screen ── */
+  .complete-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #A78BFA, #FF6B9D);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s;
+    text-align: center; padding: 32px;
+  }
+  .complete-screen.show { opacity: 1; pointer-events: all; }
+  .complete-screen .big-emoji { font-size: 80px; margin-bottom: 16px; animation: bounce 0.8s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .complete-screen h1 { font-family: 'Nunito', sans-serif; font-size: 32px; font-weight: 900; color: #fff; }
+  .complete-screen p { color: rgba(255,255,255,0.85); font-size: 15px; margin: 8px 0 24px; }
+  .complete-screen .big-pts {
+    font-family: 'Nunito', sans-serif; font-size: 64px; font-weight: 900; color: var(--sun);
+    filter: drop-shadow(0 0 12px rgba(255,209,102,0.6));
+  }
+  .complete-screen .reset-btn {
+    margin-top: 24px;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800;
+    padding: 12px 28px; border-radius: 12px; cursor: pointer;
+  }
+
+
+
+  /* ── Notice popup for backup / restore ── */
+  .notice-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 250;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    padding: 20px;
+  }
+  .notice-overlay.show { opacity: 1; pointer-events: all; }
+  .notice-box {
+    background: #fff;
+    border-radius: 22px;
+    padding: 24px 22px;
+    width: min(92vw, 360px);
+    box-shadow: 0 20px 50px rgba(15,23,42,0.35);
+    transform: translateY(8px) scale(0.96);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .notice-overlay.show .notice-box { transform: translateY(0) scale(1); }
+  .notice-emoji { font-size: 44px; text-align: center; margin-bottom: 8px; }
+  .notice-title { font-size: 20px; font-weight: 900; color: var(--text); text-align: center; margin-bottom: 10px; }
+  .notice-message { font-size: 13px; line-height: 1.7; color: #475569; white-space: pre-line; }
+  .notice-file {
+    margin: 12px 0;
+    background: #F8FAFC;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    overflow-wrap: anywhere;
+  }
+  .notice-btn {
+    display: block; width: 100%;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  /* confetti */
+  .confetti-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 300; }
+  .confetti-piece {
+    position: absolute;
+    width: 8px; height: 12px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── PWA / body padding ── */
+  body { padding-bottom: 90px; }
+
+  /* ── 起動時バックアップバナー ── */
+  .restore-banner {
+    margin: 12px 16px 0;
+    background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+  .restore-banner .rb-icon { font-size: 24px; flex-shrink: 0; }
+  .restore-banner .rb-body { flex: 1; }
+  .restore-banner .rb-title { font-size: 13px; font-weight: 800; color: #fff; }
+  .restore-banner .rb-sub   { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .restore-banner .rb-btn {
+    background: #FFD166; border: none; border-radius: 10px;
+    padding: 8px 14px; font-size: 12px; font-weight: 800;
+    color: #1E293B; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  }
+  .restore-banner .rb-close {
+    background: none; border: none; color: rgba(255,255,255,0.4);
+    font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
+  }
+
+  /* ── data-tools ── */
+  .data-tools {
+    display: flex; gap: 8px; padding: 12px 16px 0; flex-wrap: wrap;
+  }
+  .data-btn {
+    flex: 1; min-width: 0;
+    background: #fff; border: 1.5px solid #E2E8F0;
+    border-radius: 12px; padding: 10px 8px;
+    font-size: 12px; font-weight: 700; color: #475569;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .data-btn.danger { color: #EF4444; border-color: #FECACA; }
+
+  /* ── notice overlay ── */
+  .notice-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .notice-overlay.show { opacity: 1; pointer-events: all; }
+  .notice-box {
+    background: #fff; border-radius: 24px; padding: 28px 24px;
+    text-align: center; max-width: 300px; width: 90%;
+    transform: scale(0.85); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .notice-overlay.show .notice-box { transform: scale(1); }
+  .notice-emoji   { font-size: 40px; margin-bottom: 8px; }
+  .notice-title   { font-size: 18px; font-weight: 800; color: #1E293B; margin-bottom: 8px; }
+  .notice-message { font-size: 13px; color: #64748B; line-height: 1.6; white-space: pre-wrap; }
+  .notice-file    { font-size: 11px; font-family: monospace; color: #A78BFA; margin-top: 6px;
+                    background: #F3F0FF; border-radius: 6px; padding: 4px 8px; word-break: break-all; }
+  .notice-btn {
+    margin-top: 16px; display: block; width: 100%;
+    background: linear-gradient(135deg, #A78BFA, #FF6B9D);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 12px; font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+
+</style>
+</head>
+<body>
+<!-- Header -->
+<header>
+  <div class="sun"></div>
+  <div class="header-top">
+    <div class="greeting">
+      <div class="day" id="dayLabel">TODAY'S QUEST</div>
+      <div class="title">おはよう！<span>🌟</span></div>
+    </div>
+    <div class="streak-badge">
+      <div class="num" id="streakNum">0</div>
+      <div class="label">🔥 日連続</div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progressText">0 / 6 クリア</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+</header>
+
+<!-- Points banner -->
+<div class="points-banner">
+  <div class="points-icon">💎</div>
+  <div class="points-text">
+    <div class="label">TODAY'S POINTS</div>
+    <div class="value"><span id="todayPts">0</span> <span>pts</span></div>
+  </div>
+  <div class="level-badge">
+    <div class="lv">LEVEL</div>
+    <div class="lv-num" id="levelNum">1</div>
+  </div>
+</div>
+
+<!-- 起動時バックアップ読み込みバナー（JSで表示/非表示） -->
+<div class="restore-banner" id="restoreBanner" style="display:none">
+  <span class="rb-icon">📂</span>
+  <div class="rb-body">
+    <div class="rb-title">バックアップを読み込む</div>
+    <div class="rb-sub" id="restoreBannerSub">前回のデータを復元できます</div>
+  </div>
+  <button class="rb-btn" onclick="triggerImport()">読み込む</button>
+  <button class="rb-close" onclick="hideRestoreBanner()">✕</button>
+</div>
+
+<!-- Data tools -->
+<div class="data-tools">
+  <button class="data-btn" onclick="exportData()">💾 バックアップ</button>
+  <button class="data-btn" onclick="triggerImport()">📂 復元</button>
+  <button class="data-btn danger" onclick="confirmResetAll()">🧹 リセット</button>
+  <input id="importFile" type="file" accept="application/json,.json" style="display:none" onchange="importData(event)">
+</div>
+
+<!-- Timer -->
+<div class="timer-card" id="timerCard">
+  <div class="timer-face">
+    <svg width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6"/>
+      <circle id="timerArc" cx="32" cy="32" r="28" fill="none" stroke="#FFD166" stroke-width="6"
+        stroke-dasharray="175.9" stroke-dashoffset="0" stroke-linecap="round"/>
+    </svg>
+    <div class="timer-inner" id="timerDisplay">--:--</div>
+  </div>
+  <div class="timer-info">
+    <div class="timer-label">ELAPSED / NEXT</div>
+    <div class="timer-next" id="timerNext">準備中...</div>
+    <div class="timer-sub" id="timerSub">⏱ 起動からの時間</div>
+  </div>
+</div>
+
+<!-- Morning tasks -->
+<div class="section-label">🌅 朝のクエスト</div>
+<div class="task-list" id="taskList"></div>
+
+<!-- Bag section -->
+<div class="section-label" style="margin-top:20px">🎒 忘れ物チェック</div>
+<div class="bag-section">
+  <div class="bag-card">
+    <div class="bag-header">
+      <span style="font-size:20px">📦</span>
+      <h3>カバンの中身</h3>
+      <div class="badge" id="bagBadge">前夜に確認！</div>
+    </div>
+    <div class="bag-items" id="bagList"></div>
+  </div>
+</div>
+
+<!-- Reward popup -->
+<div class="popup-overlay" id="popup">
+  <div class="popup">
+    <div class="popup-emoji" id="popupEmoji">🎉</div>
+    <div class="popup-title" id="popupTitle">クリア！</div>
+    <div class="popup-pts" id="popupPts">+30 pts</div>
+    <div class="popup-msg" id="popupMsg">よくできました！</div>
+    <button class="popup-btn" onclick="closePopup()">やった！続けよう →</button>
+  </div>
+</div>
+
+<!-- Notice popup -->
+<div class="notice-overlay" id="noticeOverlay">
+  <div class="notice-box">
+    <div class="notice-emoji" id="noticeEmoji">✅</div>
+    <div class="notice-title" id="noticeTitle">完了</div>
+    <div class="notice-message" id="noticeMessage"></div>
+    <div class="notice-file" id="noticeFile" style="display:none"></div>
+    <button class="notice-btn" onclick="closeNotice()">OK</button>
+  </div>
+</div>
+
+<!-- Complete screen -->
+<div class="complete-screen" id="completeScreen">
+  <div class="big-emoji">🏆</div>
+  <h1>全クリ！</h1>
+  <p>今日の朝クエスト、完璧だよ！</p>
+  <div class="big-pts" id="completePts">0 pts</div>
+  <p style="color:rgba(255,255,255,0.7);font-size:13px">合計ポイント</p>
+  <button class="reset-btn" onclick="resetDay()">また明日もがんばろう 🌟</button>
+</div>
+
+<!-- Confetti -->
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<script>
+
+var TASKS = [
+  { id:'t1', name:'起きる・顔を洗う', icon:'🌊', iconBg:'#E0F2FE', time:'6:30', pts:20, msgs:['最高のスタート！','顔洗ったら気持ちいいでしょ？'] },
+  { id:'t2', name:'着替える',         icon:'👗', iconBg:'#FDF2FF', time:'6:40', pts:15, msgs:['いいね！','バッチリ！'] },
+  { id:'t3', name:'朝ごはんを食べる', icon:'🍳', iconBg:'#FFF7E0', time:'6:50', pts:25, msgs:['脳に栄養チャージ完了！','エネルギー満タン！'] },
+  { id:'t4', name:'歯磨きをする',     icon:'🦷', iconBg:'#F0FFF4', time:'7:10', pts:15, msgs:['ピカピカだ！','ナイス！'] },
+  { id:'t5', name:'カバンを確認する', icon:'🎒', iconBg:'#FFF0F7', time:'7:15', pts:30, msgs:['忘れ物なし！','完璧な準備！'] },
+  { id:'t6', name:'家を出る',         icon:'🚪', iconBg:'#F0F9FF', time:'7:25', pts:35, msgs:['行ってらっしゃい！','今日も最高の1日に！'] }
+];
+var BAG_ITEMS = [
+  { id:'b1', name:'教科書・ノート',  icon:'📚' },
+  { id:'b2', name:'筆記用具',        icon:'✏️' },
+  { id:'b3', name:'体育着',          icon:'👟' },
+  { id:'b4', name:'水筒',            icon:'🧃' },
+  { id:'b5', name:'定期券・交通IC',  icon:'🎫' },
+  { id:'b6', name:'スマホ・充電器',  icon:'📱' }
+];
+
+var STORAGE_KEY     = 'mqState_v2';
+var BACKUP_META_KEY = 'mqLastBackup';   // 最後にバックアップした日時を保存
+
+// ── 日付 ──
+function todayKey(d) {
+  d = d || new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart('2','0');
+  var day = String(d.getDate()).padStart('2','0');
+  return y+'-'+m+'-'+day;
+}
+function yesterdayKey() {
+  var d = new Date(); d.setDate(d.getDate()-1); return todayKey(d);
+}
+function fmtDateTime(iso) {
+  try {
+    var d = new Date(iso);
+    return (d.getMonth()+1)+'/'+d.getDate()+' '+
+           String(d.getHours()).padStart('2','0')+':'+String(d.getMinutes()).padStart('2','0');
+  } catch(e) { return iso; }
+}
+
+// ── State ──
+function defaultState() {
+  return { version:2, done:{}, bagPacked:{}, totalPts:0,
+           completedDates:{}, streak:0, lastDate:todayKey(),
+           soundMuted:false, soundVolPct:70 };
+}
+function loadState() {
+  var raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('mqState');
+  try {
+    var s = raw ? JSON.parse(raw) : {};
+    return {
+      version:2,
+      done:           s.done           || {},
+      bagPacked:      s.bagPacked      || {},
+      totalPts:       Number(s.totalPts  || 0),
+      completedDates: s.completedDates || {},
+      streak:         Number(s.streak    || 0),
+      lastDate:       s.lastDate       || todayKey(),
+      soundMuted:     !!s.soundMuted,
+      soundVolPct:    Number(s.soundVolPct || 70)
+    };
+  } catch(e) { return defaultState(); }
+}
+
+var state = loadState();
+
+// 日付変更チェック
+(function(){
+  var t = todayKey();
+  if (state.lastDate !== t) {
+    state.done = {}; state.bagPacked = {}; state.lastDate = t; saveState();
+  }
+})();
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e) { alert('保存失敗：プライベートモードや容量を確認してください。'); }
+}
+function getTodayPts() {
+  return TASKS.reduce(function(s,t){ return s+(state.done[t.id]?t.pts:0); },0);
+}
+function getDoneCount() {
+  return TASKS.filter(function(t){ return !!state.done[t.id]; }).length;
+}
+
+// ── DOM helper ──
+function el(tag, css, text) {
+  var e = document.createElement(tag);
+  if (css)             e.style.cssText = css;
+  if (text !== void 0) e.textContent   = text;
+  return e;
+}
+function svgCheck(w, h, d) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width',w); svg.setAttribute('height',h);
+  svg.setAttribute('viewBox','0 0 '+w+' '+h); svg.setAttribute('fill','none');
+  var p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',d); p.setAttribute('stroke','white');
+  p.setAttribute('stroke-width','2.2');
+  p.setAttribute('stroke-linecap','round'); p.setAttribute('stroke-linejoin','round');
+  svg.appendChild(p); return svg;
+}
+
+// ── Render ──
+function getDayLabel() {
+  var days=['日','月','火','水','木','金','土'], d=new Date();
+  return (d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
+}
+document.getElementById('dayLabel').textContent = getDayLabel();
+
+function renderTasks() {
+  var list = document.getElementById('taskList');
+  list.innerHTML = '';
+  TASKS.forEach(function(t) {
+    var done = !!state.done[t.id];
+    var div  = document.createElement('div');
+    div.className = 'task-card'+(done?' done':'');
+    var ico=el('div'); ico.className='task-icon'; ico.style.background=t.iconBg; ico.textContent=t.icon;
+    var body=el('div'); body.className='task-body';
+    var nm=el('div'); nm.className='task-name'; nm.textContent=t.name;
+    var sub=el('div'); sub.className='task-sub';
+    var ts=el('span'); ts.className='task-time'; ts.textContent='⏰ '+t.time;
+    var ps=el('span'); ps.className='task-pts';  ps.textContent='+'+t.pts+'pts';
+    sub.appendChild(ts); sub.appendChild(ps); body.appendChild(nm); body.appendChild(sub);
+    var circ=el('div'); circ.className='check-circle';
+    if (done) circ.appendChild(svgCheck(14,14,'M2 7L5.5 10.5L12 3.5'));
+    div.appendChild(ico); div.appendChild(body); div.appendChild(circ);
+    div.addEventListener('click',(function(task){return function(){toggleTask(task);};})(t));
+    list.appendChild(div);
+  });
+}
+function renderBag() {
+  var list=document.getElementById('bagList');
+  list.innerHTML='';
+  BAG_ITEMS.forEach(function(b){
+    var packed=!!state.bagPacked[b.id];
+    var div=document.createElement('div'); div.className='bag-item'+(packed?' packed':'');
+    var ico=el('span'); ico.className='bag-item-icon'; ico.textContent=b.icon;
+    var nm=el('span');  nm.className='bag-item-name';  nm.textContent=b.name;
+    var chk=el('div'); chk.className='bag-mini-check';
+    if(packed) chk.appendChild(svgCheck(12,12,'M1.5 6L4.5 9L10.5 3'));
+    div.appendChild(ico); div.appendChild(nm); div.appendChild(chk);
+    div.addEventListener('click',(function(item){return function(){toggleBag(item);};})(b));
+    list.appendChild(div);
+  });
+  var cnt=BAG_ITEMS.filter(function(b){return !!state.bagPacked[b.id];}).length;
+  document.getElementById('bagBadge').textContent=
+    (cnt===BAG_ITEMS.length)?'✅ 全部OK！':cnt+'/'+BAG_ITEMS.length+' 完了';
+}
+function renderProgress() {
+  var done=getDoneCount(), total=TASKS.length, pct=Math.round(done/total*100);
+  document.getElementById('progressText').textContent=done+' / '+total+' クリア';
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('todayPts').textContent=getTodayPts();
+  document.getElementById('streakNum').textContent=state.streak||0;
+  document.getElementById('levelNum').textContent=Math.floor((state.totalPts||0)/200)+1;
+}
+
+// ── Timer ──
+var APP_START=Date.now(), timerWarningPlayed=false;
+
+function updateTimer() {
+  var nextTask=null;
+  for(var i=0;i<TASKS.length;i++){ if(!state.done[TASKS[i].id]){nextTask=TASKS[i];break;} }
+  var elapsed=Date.now()-APP_START;
+  var eStr=Math.floor(elapsed/60000)+':'+String(Math.floor((elapsed%60000)/1000)).padStart('2','0');
+  if(!nextTask){
+    document.getElementById('timerNext').textContent='全完了！';
+    document.getElementById('timerSub').textContent='起動から '+eStr;
+    document.getElementById('timerArc').style.strokeDashoffset='0';
+    document.getElementById('timerDisplay').textContent='🏆';
+    return;
+  }
+  document.getElementById('timerDisplay').textContent=eStr;
+  document.getElementById('timerNext').textContent=nextTask.name;
+  document.getElementById('timerSub').textContent='起動からの時間';
+  var ratio=Math.min(1,elapsed/(30*60*1000));
+  document.getElementById('timerArc').style.strokeDashoffset=175.9*(1-ratio);
+  document.getElementById('timerArc').style.stroke=elapsed>20*60*1000?'#FF6B9D':'#FFD166';
+}
+function updateTimerWithSound() {
+  var nextTask=null;
+  for(var i=0;i<TASKS.length;i++){ if(!state.done[TASKS[i].id]){nextTask=TASKS[i];break;} }
+  if(nextTask){
+    var parts=nextTask.time.split(':'), target=new Date();
+    target.setHours(Number(parts[0]),Number(parts[1]),0,0);
+    var diff=target-new Date();
+    if(diff>0&&diff<3*60*1000&&!timerWarningPlayed){ timerWarningPlayed=true; playTimerWarning(); }
+    if(diff>3*60*1000) timerWarningPlayed=false;
+  }
+  updateTimer();
+}
+
+// ── Interactions ──
+function toggleTask(t) {
+  if(state.done[t.id]) return;
+  state.done[t.id]=true; state.totalPts=(state.totalPts||0)+t.pts; saveState();
+  playClear(); renderTasks(); renderProgress(); updateTimerWithSound();
+  showPopup(t.icon,t.name,t.pts,t.msgs[Math.floor(Math.random()*t.msgs.length)]);
+  if(getDoneCount()===TASKS.length) setTimeout(function(){playFanfare();showComplete();},1800);
+}
+function toggleBag(b) {
+  if(state.bagPacked[b.id]) delete state.bagPacked[b.id]; else state.bagPacked[b.id]=true;
+  saveState(); renderBag();
+}
+function showPopup(emoji,name,pts,msg) {
+  document.getElementById('popupEmoji').textContent=emoji;
+  document.getElementById('popupTitle').textContent=name+' クリア！';
+  document.getElementById('popupPts').textContent='+'+pts+' pts';
+  document.getElementById('popupMsg').textContent=msg;
+  document.getElementById('popup').classList.add('show');
+}
+function closePopup(){ document.getElementById('popup').classList.remove('show'); }
+function showComplete() {
+  document.getElementById('completePts').textContent=getTodayPts()+' pts';
+  document.getElementById('completeScreen').classList.add('show');
+  if(!state.completedDates[todayKey()]){
+    state.completedDates[todayKey()]=true;
+    state.streak=state.completedDates[yesterdayKey()]?(state.streak||0)+1:1;
+    saveState(); renderProgress();
+  }
+  launchConfetti();
+}
+function resetDay() {
+  state.done={}; state.bagPacked={}; saveState();
+  document.getElementById('completeScreen').classList.remove('show');
+  renderTasks(); renderBag(); renderProgress(); updateTimer();
+}
+function launchConfetti() {
+  var wrap=document.getElementById('confettiWrap');
+  var colors=['#FFD166','#FF6B9D','#A78BFA','#06D6A0','#7EC8E3'];
+  for(var i=0;i<60;i++){
+    var e=document.createElement('div'); e.className='confetti-piece';
+    e.style.left=Math.random()*100+'vw';
+    e.style.background=colors[Math.floor(Math.random()*colors.length)];
+    e.style.animationDuration=(1.5+Math.random()*2)+'s';
+    e.style.animationDelay=Math.random()*1.5+'s';
+    wrap.appendChild(e);
+  }
+  setTimeout(function(){wrap.innerHTML='';},5000);
+}
+
+// ── Notice ──
+function showNotice(opts) {
+  document.getElementById('noticeEmoji').textContent  =opts.emoji  ||'✅';
+  document.getElementById('noticeTitle').textContent  =opts.title  ||'お知らせ';
+  document.getElementById('noticeMessage').textContent=opts.message||'';
+  var fe=document.getElementById('noticeFile');
+  if(opts.fileName){fe.style.display='block';fe.textContent=opts.fileName;}
+  else             {fe.style.display='none'; fe.textContent='';}
+  document.getElementById('noticeOverlay').classList.add('show');
+}
+function closeNotice(){ document.getElementById('noticeOverlay').classList.remove('show'); }
+
+// ── Backup / Restore ──
+
+// バックアップ保存：コピーモーダル + ファイルDL試行
+function exportData() {
+  var now    = new Date().toISOString();
+  var payload= { app:'morning-quest', exportedAt:now, state:state };
+  var json   = JSON.stringify(payload, null, 2);
+
+  // バックアップ日時を記録
+  localStorage.setItem(BACKUP_META_KEY, now);
+  hideRestoreBanner();  // バナーを隠す
+
+  // コピーモーダルを表示（iOS主対応）
+  showBackupModal(json);
+
+  // ファイルDLも試みる（PC/Android向け）
+  try {
+    var uri='data:application/json;charset=utf-8,'+encodeURIComponent(json);
+    var a=document.createElement('a');
+    a.href=uri;
+    a.download='morning-quest-backup-'+todayKey()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch(ignore){}
+}
+
+// コピーモーダル（iOS Safari 対応の中核）
+function showBackupModal(json) {
+  var old=document.getElementById('backupModal');
+  if(old) old.remove();
+
+  var overlay=el('div','position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box');
+  overlay.id='backupModal';
+  var box=el('div','background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box');
+
+  var title=el('div','font-weight:800;font-size:16px;color:#1E293B','バックアップデータ');
+  var desc =el('div','font-size:12px;color:#64748B;line-height:1.6',
+    'iPhoneの場合：「コピー」→ メモアプリ等に貼り付けて保存。\nPC/Androidの場合：ファイルが自動ダウンロードされます。');
+
+  var ta=document.createElement('textarea');
+  ta.readOnly=true; ta.value=json;
+  ta.style.cssText='height:140px;font-size:10px;font-family:monospace;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;resize:none;color:#334155;box-sizing:border-box;width:100%';
+
+  var copyBtn=el('button','background:linear-gradient(135deg,#A78BFA,#FF6B9D);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer','コピー');
+  copyBtn.addEventListener('click',function(){
+    ta.select();
+    var ok=false;
+    try{ ok=document.execCommand('copy'); } catch(ignore){}
+    if(!ok&&navigator.clipboard){
+      navigator.clipboard.writeText(json).then(function(){ copyBtn.textContent='コピーしました！'; });
+      return;
+    }
+    copyBtn.textContent=ok?'コピーしました！':'手動でコピーしてください';
+  });
+
+  var closeBtn=el('button','background:#F1F5F9;color:#475569;border:none;border-radius:12px;padding:10px;font-size:13px;font-weight:700;cursor:pointer','閉じる');
+  closeBtn.addEventListener('click',function(){ overlay.remove(); });
+
+  box.appendChild(title); box.appendChild(desc); box.appendChild(ta);
+  box.appendChild(copyBtn); box.appendChild(closeBtn);
+  overlay.appendChild(box); document.body.appendChild(overlay);
+  setTimeout(function(){ try{ta.focus();ta.select();}catch(ignore){} },100);
+}
+
+// 復元トリガー（ファイル選択ダイアログを開く）
+function triggerImport() {
+  document.getElementById('importFile').click();
+}
+
+// ファイル読み込み後の復元処理
+function importData(event) {
+  var file=event.target.files&&event.target.files[0];
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    try {
+      var data=JSON.parse(reader.result);
+      var imported=(data.state&&typeof data.state==='object')?data.state:data;
+      if(!imported||typeof imported!=='object') throw new Error('invalid');
+      state={
+        version:2,
+        done:           imported.done           ||{},
+        bagPacked:      imported.bagPacked       ||{},
+        completedDates: imported.completedDates  ||{},
+        totalPts:       Number(imported.totalPts   ||0),
+        streak:         Number(imported.streak     ||0),
+        lastDate:       imported.lastDate        ||todayKey(),
+        soundMuted:     !!imported.soundMuted,
+        soundVolPct:    Number(imported.soundVolPct||70)
+      };
+      // 古い日のバックアップでも今日分は空に
+      if(state.lastDate!==todayKey()){
+        state.done={}; state.bagPacked={}; state.lastDate=todayKey();
+      }
+      // バックアップ日時を更新
+      localStorage.setItem(BACKUP_META_KEY, new Date().toISOString());
+      saveState();
+      renderTasks(); renderBag(); renderProgress(); updateTimerWithSound();
+      hideRestoreBanner();
+      showNotice({emoji:'📂',title:'復元しました！',
+        message:'バックアップデータを読み込みました。\nポイント・連続日数が反映されました。'});
+    } catch(e) {
+      showNotice({emoji:'⚠️',title:'復元できませんでした',
+        message:'ファイルの形式を確認してください。\n「バックアップ保存」で作ったJSONファイルを選んでください。'});
+    } finally { event.target.value=''; }
+  };
+  reader.readAsText(file);
+}
+
+function confirmResetAll() {
+  if(!confirm('累計ポイント・連続日数・今日の進捗をすべて消します。よろしいですか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('mqState');
+  localStorage.removeItem(BACKUP_META_KEY);
+  state=defaultState(); saveState();
+  renderTasks(); renderBag(); renderProgress(); updateTimerWithSound();
+  showNotice({emoji:'🧹',title:'リセットしました',message:'全データを消去しました。'});
+}
+
+// ── 起動時バックアップバナー ──
+// バックアップが過去にある場合、起動時に「読み込む？」バナーを表示
+function checkRestoreBanner() {
+  var lastBackup = localStorage.getItem(BACKUP_META_KEY);
+  if(!lastBackup) return;  // バックアップなし → 表示しない
+  var banner = document.getElementById('restoreBanner');
+  var sub    = document.getElementById('restoreBannerSub');
+  sub.textContent = '前回バックアップ: ' + fmtDateTime(lastBackup);
+  banner.style.display = 'flex';
+}
+function hideRestoreBanner() {
+  document.getElementById('restoreBanner').style.display = 'none';
+}
+
+// ── 終了時の自動保存（pagehide / visibilitychange） ──
+// ブラウザのタブを閉じる・バックグラウンドに回るタイミングでlocalStorageへ保存
+function handlePageHide() { saveState(); }
+function handleVisibilityChange() {
+  if(document.visibilityState === 'hidden') saveState();
+}
+window.addEventListener('pagehide', handlePageHide);
+document.addEventListener('visibilitychange', handleVisibilityChange);
+
+// ── Audio ──
+var audioCtx=null, bgmNodes={}, bgmStarted=false;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq,type,st,dur,gain,ctx,dest){
+  var osc=ctx.createOscillator(),g=ctx.createGain();
+  osc.connect(g); g.connect(dest); osc.type=type;
+  osc.frequency.setValueAtTime(freq,st);
+  g.gain.setValueAtTime(0,st);
+  g.gain.linearRampToValueAtTime(gain,st+0.01);
+  g.gain.exponentialRampToValueAtTime(0.001,st+dur);
+  osc.start(st); osc.stop(st+dur+0.05);
+}
+function playStartupJingle(){
+  if(state.soundMuted) return;
+  var ctx=getAudioCtx(),m=ctx.createGain(); m.gain.value=0.18; m.connect(ctx.destination);
+  [523,659,784,1047].forEach(function(f,i){playTone(f,'sine',ctx.currentTime+i*0.12,0.3,1,ctx,m);});
+  playTone(1568,'sine',ctx.currentTime+0.5,0.2,0.4,ctx,m);
+}
+function playClear(){
+  if(state.soundMuted) return;
+  var ctx=getAudioCtx(),m=ctx.createGain(),t=ctx.currentTime;
+  m.gain.value=0.22; m.connect(ctx.destination);
+  playTone(784,'sine',t,0.15,1,ctx,m);
+  playTone(1047,'sine',t+0.14,0.25,1,ctx,m);
+  playTone(1568,'triangle',t+0.28,0.2,0.5,ctx,m);
+}
+function playTimerWarning(){
+  if(state.soundMuted) return;
+  var ctx=getAudioCtx(),m=ctx.createGain(),t=ctx.currentTime;
+  m.gain.value=0.15; m.connect(ctx.destination);
+  for(var i=0;i<3;i++) playTone(880,'square',t+i*0.22,0.12,1,ctx,m);
+}
+function playFanfare(){
+  if(state.soundMuted) return;
+  var ctx=getAudioCtx(),m=ctx.createGain(),t=ctx.currentTime;
+  m.gain.value=0.2; m.connect(ctx.destination);
+  [[523,0,0.12],[659,0.12,0.12],[784,0.24,0.12],[1047,0.36,0.3],[784,0.66,0.1],[1047,0.76,0.5]].forEach(function(n){
+    playTone(n[0],'sine',t+n[1],n[2],1,ctx,m);
+  });
+  playTone(659,'triangle',t+0.36,0.3,0.4,ctx,m);
+}
+function startBGM(){
+  if(bgmStarted||state.soundMuted) return;
+  bgmStarted=true;
+  var ctx=getAudioCtx(), beat=60/112;
+  function drum(ls){
+    [0,2,4,6].forEach(function(b){
+      var t=ls+b*beat*0.5,buf=ctx.createBuffer(1,ctx.sampleRate*0.2,ctx.sampleRate),d=buf.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*0.05));
+      var src=ctx.createBufferSource(); src.buffer=buf;
+      var g=ctx.createGain(); g.gain.value=0.12; src.connect(g); g.connect(ctx.destination); src.start(t);
+    });
+    [0,1,2,3,4,5,6,7].forEach(function(b){
+      var t=ls+b*beat*0.5,buf=ctx.createBuffer(1,ctx.sampleRate*0.05,ctx.sampleRate),d=buf.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*0.01));
+      var src=ctx.createBufferSource(); src.buffer=buf;
+      var g=ctx.createGain(); g.gain.value=0.04; src.connect(g); g.connect(ctx.destination); src.start(t);
+    });
+  }
+  function melody(ls){
+    var m=ctx.createGain(); m.gain.value=0.08; m.connect(ctx.destination);
+    [[523,0],[659,1],[784,2],[659,3],[784,4],[880,5],[784,6],[659,7],[698,8],[784,9],[880,10],[784,11],[1047,12,2],[659,15]].forEach(function(n){
+      playTone(n[0],'triangle',ls+n[1]*beat*0.5,beat*0.5*(n[2]||1)*0.85,1,ctx,m);
+    });
+  }
+  function bass(ls){
+    var m=ctx.createGain(); m.gain.value=0.1; m.connect(ctx.destination);
+    [[131,0],[131,2],[131,4],[165,6],[175,8],[175,10],[175,12],[131,14]].forEach(function(n){
+      playTone(n[0],'sawtooth',ls+n[1]*beat*0.5,beat*0.9,1,ctx,m);
+    });
+  }
+  var loopLen=beat*8, next=ctx.currentTime+0.1;
+  function loop(){
+    if(!bgmStarted) return;
+    drum(next); melody(next); bass(next);
+    next+=loopLen;
+    bgmNodes.timer=setTimeout(loop,(loopLen-0.2)*1000);
+  }
+  loop();
+}
+function stopBGM(){ bgmStarted=false; clearTimeout(bgmNodes.timer); }
+
+// ── BGM Bar UI ──
+function addSoundToggle(){
+  var bar=document.createElement('div');
+  bar.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:#1E293B;border-radius:99px;padding:10px 18px;box-shadow:0 4px 24px rgba(0,0,0,0.4);z-index:50';
+  var iconEl=el('span','font-size:20px;line-height:1');
+  var lblEl =el('span','color:#fff;font-size:13px;font-weight:800;letter-spacing:0.06em;white-space:nowrap','BGM');
+  var track =el('div','width:72px;height:8px;background:rgba(255,255,255,0.18);border-radius:99px;cursor:pointer;position:relative;flex-shrink:0');
+  var fill  =el('div','height:100%;background:linear-gradient(90deg,#06D6A0,#7EC8E3);border-radius:99px;transition:width 0.15s;pointer-events:none');
+  track.appendChild(fill);
+  var muteBtn=el('button','border:1.5px solid;border-radius:8px;font-size:12px;font-weight:800;padding:5px 13px;cursor:pointer;white-space:nowrap');
+
+  function applyUI(){
+    if(state.soundMuted){
+      iconEl.textContent='🔇'; fill.style.width='0%';
+      muteBtn.textContent='ON';
+      muteBtn.style.background='rgba(6,214,160,0.22)';
+      muteBtn.style.borderColor='#06D6A0'; muteBtn.style.color='#06D6A0';
+    } else {
+      iconEl.textContent='🔊'; fill.style.width=(state.soundVolPct||70)+'%';
+      muteBtn.textContent='OFF';
+      muteBtn.style.background='rgba(255,107,157,0.28)';
+      muteBtn.style.borderColor='#FF6B9D'; muteBtn.style.color='#FF6B9D';
+    }
+  }
+  applyUI();
+  muteBtn.addEventListener('click',function(){
+    state.soundMuted=!state.soundMuted; saveState();
+    if(state.soundMuted) stopBGM(); else startBGM();
+    applyUI();
+  });
+  track.addEventListener('click',function(e){
+    if(state.soundMuted) return;
+    var rect=track.getBoundingClientRect();
+    state.soundVolPct=Math.round(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*100);
+    fill.style.width=state.soundVolPct+'%'; saveState();
+  });
+  bar.appendChild(iconEl); bar.appendChild(lblEl);
+  bar.appendChild(track);  bar.appendChild(muteBtn);
+  document.body.appendChild(bar);
+}
+
+// ── Init ──
+renderTasks();
+renderBag();
+renderProgress();
+updateTimer();
+setInterval(updateTimerWithSound, 1000);
+addSoundToggle();
+checkRestoreBanner();   // 起動時バックアップバナー
+
+document.addEventListener('click',function initSound(){
+  getAudioCtx().resume().then(function(){
+    if(!state.soundMuted){ playStartupJingle(); setTimeout(startBGM,800); }
+  });
+  document.removeEventListener('click',initSound);
+},{once:true});
+
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(err){
+      console.log('Service Worker registration failed:', err);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
