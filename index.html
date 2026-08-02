@@ -258,23 +258,26 @@
     margin: 8px 16px 4px;
     display: flex;
     gap: 8px;
+    padding: 12px 16px 0;
     flex-wrap: wrap;
   }
   .data-btn {
-    flex: 1 1 110px;
-    border: 0;
+    flex: 1;
+    min-width: 0;
     border-radius: 12px;
     padding: 10px 8px;
-    background: #FFFFFF;
-    color: var(--text);
+    background: #fff;
+    border: 1.5px solid #E2E8F0;
+    color: #475569;
     font-size: 12px;
-    font-weight: 800;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     cursor: pointer;
+    white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
   }
   .data-btn:active { transform: scale(0.98); }
-  .data-btn.danger { color: #E05580; }
+  .data-btn.danger { color: #EF4444; border-color: #FECACA; }
 
   /* ── Timer section ── */
   .timer-card {
@@ -433,50 +436,52 @@
   /* ── Notice popup for backup / restore ── */
   .notice-overlay {
     position: fixed; inset: 0;
-    background: rgba(15,23,42,0.55);
+    background: rgba(0,0,0,0.5);
     display: flex; align-items: center; justify-content: center;
-    z-index: 250;
+    z-index: 100;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.3s;
     padding: 20px;
   }
   .notice-overlay.show { opacity: 1; pointer-events: all; }
   .notice-box {
     background: #fff;
-    border-radius: 22px;
-    padding: 24px 22px;
-    width: min(92vw, 360px);
+    border-radius: 24px;
+    padding: 28px 24px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
     box-shadow: 0 20px 50px rgba(15,23,42,0.35);
-    transform: translateY(8px) scale(0.96);
-    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+    transform: scale(0.85);
+    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
   }
-  .notice-overlay.show .notice-box { transform: translateY(0) scale(1); }
-  .notice-emoji { font-size: 44px; text-align: center; margin-bottom: 8px; }
-  .notice-title { font-size: 20px; font-weight: 900; color: var(--text); text-align: center; margin-bottom: 10px; }
-  .notice-message { font-size: 13px; line-height: 1.7; color: #475569; white-space: pre-line; }
+  .notice-overlay.show .notice-box { transform: scale(1); }
+  .notice-emoji { font-size: 40px; text-align: center; margin-bottom: 8px; }
+  .notice-title { font-size: 18px; font-weight: 800; color: #1E293B; text-align: center; margin-bottom: 8px; }
+  .notice-message { font-size: 13px; line-height: 1.6; color: #64748B; white-space: pre-wrap; }
   .notice-file {
-    margin: 12px 0;
-    background: #F8FAFC;
+    margin: 6px 0 12px;
+    background: #F3F0FF;
     border: 1.5px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 11px;
     font-weight: 700;
-    color: #334155;
+    color: #A78BFA;
     overflow-wrap: anywhere;
+    word-break: break-all;
   }
   .notice-btn {
     display: block; width: 100%;
-    margin-top: 18px;
-    border: 0;
+    margin-top: 16px;
+    border: none;
     border-radius: 12px;
     padding: 12px;
     background: linear-gradient(135deg, var(--purple), var(--pink));
     color: #fff;
-    font-size: 15px;
-    font-weight: 900;
+    font-size: 15px; font-weight: 800;
     cursor: pointer;
   }
 
@@ -520,46 +525,6 @@
   .restore-banner .rb-close {
     background: none; border: none; color: rgba(255,255,255,0.4);
     font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
-  }
-
-  /* ── data-tools ── */
-  .data-tools {
-    display: flex; gap: 8px; padding: 12px 16px 0; flex-wrap: wrap;
-  }
-  .data-btn {
-    flex: 1; min-width: 0;
-    background: #fff; border: 1.5px solid #E2E8F0;
-    border-radius: 12px; padding: 10px 8px;
-    font-size: 12px; font-weight: 700; color: #475569;
-    cursor: pointer; white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  }
-  .data-btn.danger { color: #EF4444; border-color: #FECACA; }
-
-  /* ── notice overlay ── */
-  .notice-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-  }
-  .notice-overlay.show { opacity: 1; pointer-events: all; }
-  .notice-box {
-    background: #fff; border-radius: 24px; padding: 28px 24px;
-    text-align: center; max-width: 300px; width: 90%;
-    transform: scale(0.85); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-  }
-  .notice-overlay.show .notice-box { transform: scale(1); }
-  .notice-emoji   { font-size: 40px; margin-bottom: 8px; }
-  .notice-title   { font-size: 18px; font-weight: 800; color: #1E293B; margin-bottom: 8px; }
-  .notice-message { font-size: 13px; color: #64748B; line-height: 1.6; white-space: pre-wrap; }
-  .notice-file    { font-size: 11px; font-family: monospace; color: #A78BFA; margin-top: 6px;
-                    background: #F3F0FF; border-radius: 6px; padding: 4px 8px; word-break: break-all; }
-  .notice-btn {
-    margin-top: 16px; display: block; width: 100%;
-    background: linear-gradient(135deg, #A78BFA, #FF6B9D);
-    color: #fff; border: none; border-radius: 12px;
-    padding: 12px; font-size: 15px; font-weight: 800; cursor: pointer;
   }
 
 </style>
@@ -794,15 +759,50 @@ function svgCheck(w, h, d) {
   svg.appendChild(p); return svg;
 }
 
+// ── DOM cache ──
+// 起動時に一度だけ要素を取得しておく（毎回の getElementById 呼び出しを避ける）
+var DOM = {
+  dayLabel:         document.getElementById('dayLabel'),
+  taskList:         document.getElementById('taskList'),
+  bagList:          document.getElementById('bagList'),
+  bagBadge:         document.getElementById('bagBadge'),
+  progressText:     document.getElementById('progressText'),
+  progressPct:      document.getElementById('progressPct'),
+  progressFill:     document.getElementById('progressFill'),
+  todayPts:         document.getElementById('todayPts'),
+  streakNum:        document.getElementById('streakNum'),
+  levelNum:         document.getElementById('levelNum'),
+  timerNext:        document.getElementById('timerNext'),
+  timerSub:         document.getElementById('timerSub'),
+  timerArc:         document.getElementById('timerArc'),
+  timerDisplay:     document.getElementById('timerDisplay'),
+  popupEmoji:       document.getElementById('popupEmoji'),
+  popupTitle:       document.getElementById('popupTitle'),
+  popupPts:         document.getElementById('popupPts'),
+  popupMsg:         document.getElementById('popupMsg'),
+  popup:            document.getElementById('popup'),
+  completePts:      document.getElementById('completePts'),
+  completeScreen:   document.getElementById('completeScreen'),
+  confettiWrap:     document.getElementById('confettiWrap'),
+  noticeEmoji:      document.getElementById('noticeEmoji'),
+  noticeTitle:      document.getElementById('noticeTitle'),
+  noticeMessage:    document.getElementById('noticeMessage'),
+  noticeFile:       document.getElementById('noticeFile'),
+  noticeOverlay:    document.getElementById('noticeOverlay'),
+  importFile:       document.getElementById('importFile'),
+  restoreBanner:    document.getElementById('restoreBanner'),
+  restoreBannerSub: document.getElementById('restoreBannerSub')
+};
+
 // ── Render ──
 function getDayLabel() {
   var days=['日','月','火','水','木','金','土'], d=new Date();
   return (d.getMonth()+1)+'月'+d.getDate()+'日（'+days[d.getDay()]+'）';
 }
-document.getElementById('dayLabel').textContent = getDayLabel();
+DOM.dayLabel.textContent = getDayLabel();
 
 function renderTasks() {
-  var list = document.getElementById('taskList');
+  var list = DOM.taskList;
   list.innerHTML = '';
   TASKS.forEach(function(t) {
     var done = !!state.done[t.id];
@@ -823,7 +823,7 @@ function renderTasks() {
   });
 }
 function renderBag() {
-  var list=document.getElementById('bagList');
+  var list=DOM.bagList;
   list.innerHTML='';
   BAG_ITEMS.forEach(function(b){
     var packed=!!state.bagPacked[b.id];
@@ -837,17 +837,17 @@ function renderBag() {
     list.appendChild(div);
   });
   var cnt=BAG_ITEMS.filter(function(b){return !!state.bagPacked[b.id];}).length;
-  document.getElementById('bagBadge').textContent=
+  DOM.bagBadge.textContent=
     (cnt===BAG_ITEMS.length)?'✅ 全部OK！':cnt+'/'+BAG_ITEMS.length+' 完了';
 }
 function renderProgress() {
   var done=getDoneCount(), total=TASKS.length, pct=Math.round(done/total*100);
-  document.getElementById('progressText').textContent=done+' / '+total+' クリア';
-  document.getElementById('progressPct').textContent=pct+'%';
-  document.getElementById('progressFill').style.width=pct+'%';
-  document.getElementById('todayPts').textContent=getTodayPts();
-  document.getElementById('streakNum').textContent=state.streak||0;
-  document.getElementById('levelNum').textContent=Math.floor((state.totalPts||0)/200)+1;
+  DOM.progressText.textContent=done+' / '+total+' クリア';
+  DOM.progressPct.textContent=pct+'%';
+  DOM.progressFill.style.width=pct+'%';
+  DOM.todayPts.textContent=getTodayPts();
+  DOM.streakNum.textContent=state.streak||0;
+  DOM.levelNum.textContent=Math.floor((state.totalPts||0)/200)+1;
 }
 
 // ── Timer ──
@@ -859,18 +859,18 @@ function updateTimer() {
   var elapsed=Date.now()-APP_START;
   var eStr=Math.floor(elapsed/60000)+':'+String(Math.floor((elapsed%60000)/1000)).padStart('2','0');
   if(!nextTask){
-    document.getElementById('timerNext').textContent='全完了！';
-    document.getElementById('timerSub').textContent='起動から '+eStr;
-    document.getElementById('timerArc').style.strokeDashoffset='0';
-    document.getElementById('timerDisplay').textContent='🏆';
+    DOM.timerNext.textContent='全完了！';
+    DOM.timerSub.textContent='起動から '+eStr;
+    DOM.timerArc.style.strokeDashoffset='0';
+    DOM.timerDisplay.textContent='🏆';
     return;
   }
-  document.getElementById('timerDisplay').textContent=eStr;
-  document.getElementById('timerNext').textContent=nextTask.name;
-  document.getElementById('timerSub').textContent='起動からの時間';
+  DOM.timerDisplay.textContent=eStr;
+  DOM.timerNext.textContent=nextTask.name;
+  DOM.timerSub.textContent='起動からの時間';
   var ratio=Math.min(1,elapsed/(30*60*1000));
-  document.getElementById('timerArc').style.strokeDashoffset=175.9*(1-ratio);
-  document.getElementById('timerArc').style.stroke=elapsed>20*60*1000?'#FF6B9D':'#FFD166';
+  DOM.timerArc.style.strokeDashoffset=175.9*(1-ratio);
+  DOM.timerArc.style.stroke=elapsed>20*60*1000?'#FF6B9D':'#FFD166';
 }
 function updateTimerWithSound() {
   var nextTask=null;
@@ -898,16 +898,16 @@ function toggleBag(b) {
   saveState(); renderBag();
 }
 function showPopup(emoji,name,pts,msg) {
-  document.getElementById('popupEmoji').textContent=emoji;
-  document.getElementById('popupTitle').textContent=name+' クリア！';
-  document.getElementById('popupPts').textContent='+'+pts+' pts';
-  document.getElementById('popupMsg').textContent=msg;
-  document.getElementById('popup').classList.add('show');
+  DOM.popupEmoji.textContent=emoji;
+  DOM.popupTitle.textContent=name+' クリア！';
+  DOM.popupPts.textContent='+'+pts+' pts';
+  DOM.popupMsg.textContent=msg;
+  DOM.popup.classList.add('show');
 }
-function closePopup(){ document.getElementById('popup').classList.remove('show'); }
+function closePopup(){ DOM.popup.classList.remove('show'); }
 function showComplete() {
-  document.getElementById('completePts').textContent=getTodayPts()+' pts';
-  document.getElementById('completeScreen').classList.add('show');
+  DOM.completePts.textContent=getTodayPts()+' pts';
+  DOM.completeScreen.classList.add('show');
   if(!state.completedDates[todayKey()]){
     state.completedDates[todayKey()]=true;
     state.streak=state.completedDates[yesterdayKey()]?(state.streak||0)+1:1;
@@ -917,11 +917,11 @@ function showComplete() {
 }
 function resetDay() {
   state.done={}; state.bagPacked={}; saveState();
-  document.getElementById('completeScreen').classList.remove('show');
+  DOM.completeScreen.classList.remove('show');
   renderTasks(); renderBag(); renderProgress(); updateTimer();
 }
 function launchConfetti() {
-  var wrap=document.getElementById('confettiWrap');
+  var wrap=DOM.confettiWrap;
   var colors=['#FFD166','#FF6B9D','#A78BFA','#06D6A0','#7EC8E3'];
   for(var i=0;i<60;i++){
     var e=document.createElement('div'); e.className='confetti-piece';
@@ -936,15 +936,15 @@ function launchConfetti() {
 
 // ── Notice ──
 function showNotice(opts) {
-  document.getElementById('noticeEmoji').textContent  =opts.emoji  ||'✅';
-  document.getElementById('noticeTitle').textContent  =opts.title  ||'お知らせ';
-  document.getElementById('noticeMessage').textContent=opts.message||'';
-  var fe=document.getElementById('noticeFile');
+  DOM.noticeEmoji.textContent  =opts.emoji  ||'✅';
+  DOM.noticeTitle.textContent  =opts.title  ||'お知らせ';
+  DOM.noticeMessage.textContent=opts.message||'';
+  var fe=DOM.noticeFile;
   if(opts.fileName){fe.style.display='block';fe.textContent=opts.fileName;}
   else             {fe.style.display='none'; fe.textContent='';}
-  document.getElementById('noticeOverlay').classList.add('show');
+  DOM.noticeOverlay.classList.add('show');
 }
-function closeNotice(){ document.getElementById('noticeOverlay').classList.remove('show'); }
+function closeNotice(){ DOM.noticeOverlay.classList.remove('show'); }
 
 // ── Backup / Restore ──
 
@@ -1011,7 +1011,7 @@ function showBackupModal(json) {
 
 // 復元トリガー（ファイル選択ダイアログを開く）
 function triggerImport() {
-  document.getElementById('importFile').click();
+  DOM.importFile.click();
 }
 
 // ファイル読み込み後の復元処理
@@ -1069,13 +1069,13 @@ function confirmResetAll() {
 function checkRestoreBanner() {
   var lastBackup = localStorage.getItem(BACKUP_META_KEY);
   if(!lastBackup) return;  // バックアップなし → 表示しない
-  var banner = document.getElementById('restoreBanner');
-  var sub    = document.getElementById('restoreBannerSub');
+  var banner = DOM.restoreBanner;
+  var sub    = DOM.restoreBannerSub;
   sub.textContent = '前回バックアップ: ' + fmtDateTime(lastBackup);
   banner.style.display = 'flex';
 }
 function hideRestoreBanner() {
-  document.getElementById('restoreBanner').style.display = 'none';
+  DOM.restoreBanner.style.display = 'none';
 }
 
 // ── 終了時の自動保存（pagehide / visibilitychange） ──
