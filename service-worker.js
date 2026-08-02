@@ -1,4 +1,4 @@
-const CACHE_NAME = 'morning-quest-v1';
+const CACHE_NAME = 'morning-quest-v2';
 const ASSETS = [
   './',
   './index.html',

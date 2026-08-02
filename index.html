@@ -142,6 +142,7 @@
   .points-text .label { font-size: 11px; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.06em; }
   .points-text .value { font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900; color: #fff; line-height: 1.1; }
   .points-text .value span { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8); }
+  .points-text .rank { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.85); margin-top: 3px; }
 
   .level-badge {
     background: rgba(255,255,255,0.25);
@@ -262,7 +263,7 @@
     flex-wrap: wrap;
   }
   .data-btn {
-    flex: 1;
+    flex: 1 1 96px;
     min-width: 0;
     border-radius: 12px;
     padding: 10px 8px;
@@ -358,6 +359,36 @@
     border-color: var(--green);
   }
   .bag-item-icon { font-size: 18px; }
+
+  /* ── Rewards ── */
+  .reward-list { display: flex; flex-direction: column; gap: 10px; }
+  .reward-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 12px; background: #F8FAFC;
+  }
+  .reward-card.locked { opacity: 0.55; }
+  .reward-icon { font-size: 22px; flex-shrink: 0; }
+  .reward-body { flex: 1; min-width: 0; }
+  .reward-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .reward-cost { font-size: 11px; font-weight: 700; color: var(--purple); margin-top: 2px; }
+  .reward-btn {
+    border: 0; border-radius: 10px; padding: 8px 12px;
+    font-size: 12px; font-weight: 800;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: #fff; cursor: pointer; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .reward-btn:disabled { background: #E2E8F0; color: #94A3B8; cursor: not-allowed; }
+
+  /* ── Calendar (history) ── */
+  .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .daycell {
+    aspect-ratio: 1; border-radius: 10px; background: #F1F5F9;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--text);
+  }
+  .daycell.done { background: #FFF7CC; }
+  .daycell.today { outline: 2px solid var(--purple); outline-offset: -2px; }
 
   /* ── Reward popup ── */
   .popup-overlay {
@@ -560,6 +591,7 @@
   <div class="points-text">
     <div class="label">TODAY'S POINTS</div>
     <div class="value"><span id="todayPts">0</span> <span>pts</span></div>
+    <div class="rank" id="rankName">見習い冒険者</div>
   </div>
   <div class="level-badge">
     <div class="lv">LEVEL</div>
@@ -578,10 +610,34 @@
   <button class="rb-close" onclick="hideRestoreBanner()">✕</button>
 </div>
 
+<!-- ホーム画面追加の案内バナー（JSで表示/非表示） -->
+<div class="restore-banner" id="installBanner" style="display:none">
+  <span class="rb-icon">📲</span>
+  <div class="rb-body">
+    <div class="rb-title" id="installTitle">アプリとして使えるよ</div>
+    <div class="rb-sub" id="installSub">ホーム画面に追加すると便利</div>
+  </div>
+  <button class="rb-btn" id="installActionBtn">追加する</button>
+  <button class="rb-close" onclick="hideInstallBanner()">✕</button>
+</div>
+
+<!-- バックアップし忘れリマインダー（JSで表示/非表示） -->
+<div class="restore-banner" id="backupRemindBanner" style="display:none">
+  <span class="rb-icon">💾</span>
+  <div class="rb-body">
+    <div class="rb-title">バックアップしておこう</div>
+    <div class="rb-sub">ポイントや連続記録が消えないように保存しよう</div>
+  </div>
+  <button class="rb-btn" onclick="exportData()">バックアップ</button>
+  <button class="rb-close" onclick="hideBackupRemindBanner()">✕</button>
+</div>
+
 <!-- Data tools -->
 <div class="data-tools">
   <button class="data-btn" onclick="exportData()">💾 バックアップ</button>
   <button class="data-btn" onclick="triggerImport()">📂 復元</button>
+  <button class="data-btn" onclick="toggleHistory()">📅 記録</button>
+  <button class="data-btn" onclick="showSettings()">⚙️ 設定</button>
   <button class="data-btn danger" onclick="confirmResetAll()">🧹 リセット</button>
   <input id="importFile" type="file" accept="application/json,.json" style="display:none" onchange="importData(event)">
 </div>
@@ -617,6 +673,27 @@
       <div class="badge" id="bagBadge">前夜に確認！</div>
     </div>
     <div class="bag-items" id="bagList"></div>
+  </div>
+</div>
+
+<!-- ごほうび交換 -->
+<div class="section-label" style="margin-top:20px">🎁 ごほうび交換</div>
+<div class="bag-section">
+  <div class="bag-card">
+    <div class="bag-header">
+      <span style="font-size:20px">🎁</span>
+      <h3>使えるポイント</h3>
+      <div class="badge"><span id="walletPts">0</span> pts</div>
+    </div>
+    <div class="reward-list" id="rewardList"></div>
+  </div>
+</div>
+
+<!-- 今月の記録（JSで表示/非表示） -->
+<div class="section-label" id="historyLabel" style="margin-top:20px; display:none">📅 今月の記録</div>
+<div class="bag-section" id="historyBox" style="display:none">
+  <div class="bag-card">
+    <div class="calendar" id="calendar"></div>
   </div>
 </div>
 
@@ -673,9 +750,18 @@ var BAG_ITEMS = [
   { id:'b5', name:'定期券・交通IC',  icon:'🎫' },
   { id:'b6', name:'スマホ・充電器',  icon:'📱' }
 ];
+var REWARDS = [
+  { id:'r1', name:'アイスを1つ',     icon:'🍦', cost:100 },
+  { id:'r2', name:'ゲームを30分',    icon:'🎮', cost:150 },
+  { id:'r3', name:'好きな動画を1本', icon:'📺', cost:80  },
+  { id:'r4', name:'おやつ選び放題',  icon:'🍬', cost:120 }
+];
 
-var STORAGE_KEY     = 'mqState_v2';
-var BACKUP_META_KEY = 'mqLastBackup';   // 最後にバックアップした日時を保存
+var STORAGE_KEY          = 'mqState_v2';
+var BACKUP_META_KEY      = 'mqLastBackup';        // 最後にバックアップした日時を保存
+var INSTALL_DISMISS_KEY  = 'mqInstallTipDismissed';
+var BACKUP_REMIND_KEY    = 'mqBackupRemindDismissed';
+var BACKUP_REMIND_PTS    = 150; // このポイントを超えても未バックアップならリマインド
 
 // ── 日付 ──
 function todayKey(d) {
@@ -698,9 +784,9 @@ function fmtDateTime(iso) {
 
 // ── State ──
 function defaultState() {
-  return { version:2, done:{}, bagPacked:{}, totalPts:0,
+  return { version:2, done:{}, bagPacked:{}, totalPts:0, spendablePts:0,
            completedDates:{}, streak:0, lastDate:todayKey(),
-           soundMuted:false, soundVolPct:70 };
+           soundMuted:false, soundVolPct:70, taskTimes:{} };
 }
 function loadState() {
   var raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('mqState');
@@ -710,12 +796,14 @@ function loadState() {
       version:2,
       done:           s.done           || {},
       bagPacked:      s.bagPacked      || {},
-      totalPts:       Number(s.totalPts  || 0),
+      totalPts:       Number(s.totalPts     || 0),
+      spendablePts:   Number(s.spendablePts || 0),
       completedDates: s.completedDates || {},
       streak:         Number(s.streak    || 0),
       lastDate:       s.lastDate       || todayKey(),
       soundMuted:     !!s.soundMuted,
-      soundVolPct:    Number(s.soundVolPct || 70)
+      soundVolPct:    Number(s.soundVolPct || 70),
+      taskTimes:      s.taskTimes      || {}
     };
   } catch(e) { return defaultState(); }
 }
@@ -739,6 +827,25 @@ function getTodayPts() {
 }
 function getDoneCount() {
   return TASKS.filter(function(t){ return !!state.done[t.id]; }).length;
+}
+function getTaskTime(t) {
+  return (state.taskTimes && state.taskTimes[t.id]) || t.time;
+}
+// <input type="time"> は "HH:MM"（ゼロ埋め）でないと値を受け付けないため変換する
+function padTime(hm) {
+  var parts = String(hm).split(':');
+  return String(parts[0]).padStart(2,'0')+':'+String(parts[1]).padStart(2,'0');
+}
+function getLevel() {
+  return Math.floor((state.totalPts||0)/200)+1;
+}
+function getRank() {
+  var lv = getLevel();
+  if (lv>=10) return '伝説の朝勇者';
+  if (lv>=7)  return '大勇者';
+  if (lv>=4)  return '勇者';
+  if (lv>=2)  return '冒険者';
+  return '見習い冒険者';
 }
 
 // ── DOM helper ──
@@ -791,7 +898,18 @@ var DOM = {
   noticeOverlay:    document.getElementById('noticeOverlay'),
   importFile:       document.getElementById('importFile'),
   restoreBanner:    document.getElementById('restoreBanner'),
-  restoreBannerSub: document.getElementById('restoreBannerSub')
+  restoreBannerSub: document.getElementById('restoreBannerSub'),
+  rankName:         document.getElementById('rankName'),
+  rewardList:       document.getElementById('rewardList'),
+  walletPts:        document.getElementById('walletPts'),
+  historyBox:       document.getElementById('historyBox'),
+  historyLabel:     document.getElementById('historyLabel'),
+  calendar:         document.getElementById('calendar'),
+  installBanner:    document.getElementById('installBanner'),
+  installTitle:     document.getElementById('installTitle'),
+  installSub:       document.getElementById('installSub'),
+  installActionBtn: document.getElementById('installActionBtn'),
+  backupRemindBanner: document.getElementById('backupRemindBanner')
 };
 
 // ── Render ──
@@ -812,7 +930,7 @@ function renderTasks() {
     var body=el('div'); body.className='task-body';
     var nm=el('div'); nm.className='task-name'; nm.textContent=t.name;
     var sub=el('div'); sub.className='task-sub';
-    var ts=el('span'); ts.className='task-time'; ts.textContent='⏰ '+t.time;
+    var ts=el('span'); ts.className='task-time'; ts.textContent='⏰ '+getTaskTime(t);
     var ps=el('span'); ps.className='task-pts';  ps.textContent='+'+t.pts+'pts';
     sub.appendChild(ts); sub.appendChild(ps); body.appendChild(nm); body.appendChild(sub);
     var circ=el('div'); circ.className='check-circle';
@@ -847,7 +965,50 @@ function renderProgress() {
   DOM.progressFill.style.width=pct+'%';
   DOM.todayPts.textContent=getTodayPts();
   DOM.streakNum.textContent=state.streak||0;
-  DOM.levelNum.textContent=Math.floor((state.totalPts||0)/200)+1;
+  DOM.levelNum.textContent=getLevel();
+  DOM.rankName.textContent=getRank();
+}
+function renderRewards() {
+  var list=DOM.rewardList; list.innerHTML='';
+  REWARDS.forEach(function(r){
+    var afford = (state.spendablePts||0) >= r.cost;
+    var div=el('div'); div.className='reward-card'+(afford?'':' locked');
+    var ico=el('div'); ico.className='reward-icon'; ico.textContent=r.icon;
+    var body=el('div'); body.className='reward-body';
+    var nm=el('div'); nm.className='reward-name'; nm.textContent=r.name;
+    var cost=el('div'); cost.className='reward-cost'; cost.textContent=r.cost+' pts';
+    body.appendChild(nm); body.appendChild(cost);
+    var btn=document.createElement('button');
+    btn.className='reward-btn'; btn.textContent='交換する'; btn.disabled=!afford;
+    btn.addEventListener('click',(function(reward){return function(){ redeemReward(reward); };})(r));
+    div.appendChild(ico); div.appendChild(body); div.appendChild(btn);
+    list.appendChild(div);
+  });
+  DOM.walletPts.textContent = state.spendablePts||0;
+}
+function redeemReward(r) {
+  if((state.spendablePts||0) < r.cost) return;
+  if(!confirm(r.icon+' '+r.name+' と交換する？\n'+r.cost+'pts 使うよ。')) return;
+  state.spendablePts -= r.cost; saveState();
+  renderRewards();
+  showNotice({emoji:r.icon, title:'交換した！', message:r.name+'と交換しました。\nおうちの人に見せてね！'});
+}
+function renderCalendar() {
+  var cal=DOM.calendar; cal.innerHTML='';
+  var now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  var days=new Date(y,m+1,0).getDate();
+  for(var i=1;i<=days;i++){
+    var k=todayKey(new Date(y,m,i));
+    var cell=el('div'); cell.className='daycell'+(state.completedDates[k]?' done':'')+(k===todayKey()?' today':'');
+    cell.textContent = state.completedDates[k] ? '🌞' : String(i);
+    cal.appendChild(cell);
+  }
+}
+function toggleHistory() {
+  var show = DOM.historyBox.style.display==='none';
+  DOM.historyBox.style.display   = show ? 'block' : 'none';
+  DOM.historyLabel.style.display = show ? 'block' : 'none';
+  if(show) renderCalendar();
 }
 
 // ── Timer ──
@@ -876,7 +1037,7 @@ function updateTimerWithSound() {
   var nextTask=null;
   for(var i=0;i<TASKS.length;i++){ if(!state.done[TASKS[i].id]){nextTask=TASKS[i];break;} }
   if(nextTask){
-    var parts=nextTask.time.split(':'), target=new Date();
+    var parts=getTaskTime(nextTask).split(':'), target=new Date();
     target.setHours(Number(parts[0]),Number(parts[1]),0,0);
     var diff=target-new Date();
     if(diff>0&&diff<3*60*1000&&!timerWarningPlayed){ timerWarningPlayed=true; playTimerWarning(); }
@@ -885,13 +1046,21 @@ function updateTimerWithSound() {
   updateTimer();
 }
 
+// ── Haptics ──
+function vibrate(pattern) {
+  try { if(navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
+
 // ── Interactions ──
 function toggleTask(t) {
-  if(state.done[t.id]) return;
-  state.done[t.id]=true; state.totalPts=(state.totalPts||0)+t.pts; saveState();
-  playClear(); renderTasks(); renderProgress(); updateTimerWithSound();
+  if(state.done[t.id]){
+    showNotice({emoji:'😊', title:'もう完了してるよ', message:t.name+'は今日もうクリア済みです。'});
+    return;
+  }
+  state.done[t.id]=true; state.totalPts=(state.totalPts||0)+t.pts; state.spendablePts=(state.spendablePts||0)+t.pts; saveState();
+  playClear(); vibrate(30); renderTasks(); renderProgress(); renderRewards(); updateTimerWithSound();
   showPopup(t.icon,t.name,t.pts,t.msgs[Math.floor(Math.random()*t.msgs.length)]);
-  if(getDoneCount()===TASKS.length) setTimeout(function(){playFanfare();showComplete();},1800);
+  if(getDoneCount()===TASKS.length) setTimeout(function(){playFanfare();vibrate([40,60,40]);showComplete();},1800);
 }
 function toggleBag(b) {
   if(state.bagPacked[b.id]) delete state.bagPacked[b.id]; else state.bagPacked[b.id]=true;
@@ -957,6 +1126,7 @@ function exportData() {
   // バックアップ日時を記録
   localStorage.setItem(BACKUP_META_KEY, now);
   hideRestoreBanner();  // バナーを隠す
+  DOM.backupRemindBanner.style.display = 'none';
 
   // コピーモーダルを表示（iOS主対応）
   showBackupModal(json);
@@ -1029,11 +1199,13 @@ function importData(event) {
         done:           imported.done           ||{},
         bagPacked:      imported.bagPacked       ||{},
         completedDates: imported.completedDates  ||{},
-        totalPts:       Number(imported.totalPts   ||0),
+        totalPts:       Number(imported.totalPts     ||0),
+        spendablePts:   Number(imported.spendablePts ||0),
         streak:         Number(imported.streak     ||0),
         lastDate:       imported.lastDate        ||todayKey(),
         soundMuted:     !!imported.soundMuted,
-        soundVolPct:    Number(imported.soundVolPct||70)
+        soundVolPct:    Number(imported.soundVolPct||70),
+        taskTimes:      imported.taskTimes       ||{}
       };
       // 古い日のバックアップでも今日分は空に
       if(state.lastDate!==todayKey()){
@@ -1042,8 +1214,9 @@ function importData(event) {
       // バックアップ日時を更新
       localStorage.setItem(BACKUP_META_KEY, new Date().toISOString());
       saveState();
-      renderTasks(); renderBag(); renderProgress(); updateTimerWithSound();
+      renderTasks(); renderBag(); renderProgress(); renderRewards(); updateTimerWithSound();
       hideRestoreBanner();
+      DOM.backupRemindBanner.style.display = 'none';
       showNotice({emoji:'📂',title:'復元しました！',
         message:'バックアップデータを読み込みました。\nポイント・連続日数が反映されました。'});
     } catch(e) {
@@ -1059,8 +1232,10 @@ function confirmResetAll() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('mqState');
   localStorage.removeItem(BACKUP_META_KEY);
+  localStorage.removeItem(INSTALL_DISMISS_KEY);
+  localStorage.removeItem(BACKUP_REMIND_KEY);
   state=defaultState(); saveState();
-  renderTasks(); renderBag(); renderProgress(); updateTimerWithSound();
+  renderTasks(); renderBag(); renderProgress(); renderRewards(); updateTimerWithSound();
   showNotice({emoji:'🧹',title:'リセットしました',message:'全データを消去しました。'});
 }
 
@@ -1076,6 +1251,93 @@ function checkRestoreBanner() {
 }
 function hideRestoreBanner() {
   DOM.restoreBanner.style.display = 'none';
+}
+
+// ── バックアップし忘れリマインダー ──
+// 一度もバックアップせずポイントが貯まってきたら「保存しておこう」を促す
+function checkBackupReminder() {
+  if (localStorage.getItem(BACKUP_META_KEY)) return;      // バックアップ済みなら不要
+  if ((state.totalPts||0) < BACKUP_REMIND_PTS) return;     // まだ促すほどではない
+  if (localStorage.getItem(BACKUP_REMIND_KEY)) return;     // 一度閉じたら出さない
+  DOM.backupRemindBanner.style.display = 'flex';
+}
+function hideBackupRemindBanner() {
+  DOM.backupRemindBanner.style.display = 'none';
+  localStorage.setItem(BACKUP_REMIND_KEY, '1');
+}
+
+// ── ホーム画面に追加の案内 ──
+var deferredInstallPrompt = null;
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function showInstallBanner(kind) {
+  if (localStorage.getItem(INSTALL_DISMISS_KEY)) return;
+  DOM.installTitle.textContent = kind==='ios' ? 'ホーム画面に追加できるよ' : 'アプリとして使えるよ';
+  DOM.installSub.textContent   = kind==='ios' ? '共有ボタン → 「ホーム画面に追加」' : 'タップしてインストール';
+  DOM.installActionBtn.style.display = kind==='ios' ? 'none' : 'inline-block';
+  DOM.installBanner.style.display = 'flex';
+}
+function hideInstallBanner() {
+  DOM.installBanner.style.display = 'none';
+  localStorage.setItem(INSTALL_DISMISS_KEY, '1');
+}
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (!isStandalone()) showInstallBanner('android');
+});
+DOM.installActionBtn.addEventListener('click', function(){
+  if (!deferredInstallPrompt) { hideInstallBanner(); return; }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(function(){
+    deferredInstallPrompt = null;
+    hideInstallBanner();
+  });
+});
+
+// ── 設定（タスクの時刻編集） ──
+function showSettings() {
+  var old = document.getElementById('settingsModal');
+  if (old) old.remove();
+
+  var overlay = el('div','position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box');
+  overlay.id = 'settingsModal';
+  var box = el('div','background:#fff;border-radius:20px;padding:22px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto;box-sizing:border-box');
+
+  var title = el('div','font-weight:900;font-size:17px;color:#1E293B;margin-bottom:4px','⚙️ タスクの時刻を設定');
+  var desc  = el('div','font-size:12px;color:#64748B;margin-bottom:14px','タイマーの警告や表示時刻を調整できます。');
+  box.appendChild(title); box.appendChild(desc);
+
+  var inputs = {};
+  TASKS.forEach(function(t){
+    var row = el('div','display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9');
+    var lbl = el('div','flex:1;font-size:13px;font-weight:700;color:#334155', t.icon+' '+t.name);
+    var input = document.createElement('input');
+    input.type = 'time';
+    input.value = padTime(getTaskTime(t));
+    input.style.cssText = 'border:1.5px solid #E2E8F0;border-radius:8px;padding:6px 8px;font-size:13px;font-family:inherit';
+    row.appendChild(lbl); row.appendChild(input);
+    box.appendChild(row);
+    inputs[t.id] = input;
+  });
+
+  var saveBtn = el('button','width:100%;margin-top:16px;border:0;border-radius:12px;padding:12px;background:linear-gradient(135deg,#A78BFA,#FF6B9D);color:#fff;font-size:15px;font-weight:900;cursor:pointer','保存する');
+  saveBtn.addEventListener('click', function(){
+    state.taskTimes = state.taskTimes || {};
+    TASKS.forEach(function(t){ if(inputs[t.id].value) state.taskTimes[t.id] = inputs[t.id].value; });
+    saveState(); renderTasks(); updateTimer();
+    overlay.remove();
+    showNotice({emoji:'⚙️', title:'保存しました', message:'クエストの時刻を更新したよ。'});
+  });
+  var closeBtn = el('button','width:100%;margin-top:8px;border:0;border-radius:12px;padding:10px;background:#F1F5F9;color:#475569;font-size:13px;font-weight:700;cursor:pointer','閉じる');
+  closeBtn.addEventListener('click', function(){ overlay.remove(); });
+
+  box.appendChild(saveBtn); box.appendChild(closeBtn);
+  overlay.appendChild(box); document.body.appendChild(overlay);
 }
 
 // ── 終了時の自動保存（pagehide / visibilitychange） ──
@@ -1218,10 +1480,13 @@ function addSoundToggle(){
 renderTasks();
 renderBag();
 renderProgress();
+renderRewards();
 updateTimer();
 setInterval(updateTimerWithSound, 1000);
 addSoundToggle();
-checkRestoreBanner();   // 起動時バックアップバナー
+checkRestoreBanner();     // 起動時バックアップバナー
+checkBackupReminder();    // バックアップし忘れリマインダー
+if (isIOS() && !isStandalone()) showInstallBanner('ios');   // iOSはbeforeinstallpromptが無いので手動案内
 
 document.addEventListener('click',function initSound(){
   getAudioCtx().resume().then(function(){
