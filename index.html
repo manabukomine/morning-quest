@@ -726,7 +726,7 @@
   <p>今日の朝クエスト、完璧だよ！</p>
   <div class="big-pts" id="completePts">0 pts</div>
   <p style="color:rgba(255,255,255,0.7);font-size:13px">合計ポイント</p>
-  <button class="reset-btn" onclick="resetDay()">また明日もがんばろう 🌟</button>
+  <button class="reset-btn" onclick="closeComplete()">また明日もがんばろう 🌟</button>
 </div>
 
 <!-- Confetti -->
@@ -1084,10 +1084,9 @@ function showComplete() {
   }
   launchConfetti();
 }
-function resetDay() {
-  state.done={}; state.bagPacked={}; saveState();
+// 全クリ画面を閉じるだけ（チェック状態はそのまま＝同日中に何度もやり直してポイントを稼げないようにする）
+function closeComplete() {
   DOM.completeScreen.classList.remove('show');
-  renderTasks(); renderBag(); renderProgress(); updateTimer();
 }
 function launchConfetti() {
   var wrap=DOM.confettiWrap;
