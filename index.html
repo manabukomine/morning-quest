@@ -380,6 +380,22 @@
   }
   .reward-btn:disabled { background: #E2E8F0; color: #94A3B8; cursor: not-allowed; }
 
+  /* ── Goals (savings) ── */
+  .goal-list { display: flex; flex-direction: column; gap: 14px; }
+  .goal-card { }
+  .goal-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .goal-icon { font-size: 20px; flex-shrink: 0; }
+  .goal-name { font-size: 14px; font-weight: 800; color: var(--text); flex: 1; min-width: 0; }
+  .goal-amt { font-size: 12px; font-weight: 700; color: var(--purple); white-space: nowrap; }
+  .goal-track { height: 14px; border-radius: 99px; background: #F1F5F9; overflow: hidden; }
+  .goal-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--green), var(--sky));
+    transition: width 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .goal-card.achieved .goal-fill { background: linear-gradient(90deg, var(--sun), var(--sun-glow)); }
+  .goal-badge { margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--sun-glow); text-align: center; }
+
   /* ── Calendar (history) ── */
   .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .daycell {
@@ -676,6 +692,14 @@
   </div>
 </div>
 
+<!-- 大きな目標（貯金） -->
+<div class="section-label" style="margin-top:20px">🎯 大きな目標</div>
+<div class="bag-section">
+  <div class="bag-card">
+    <div class="goal-list" id="goalList"></div>
+  </div>
+</div>
+
 <!-- ごほうび交換 -->
 <div class="section-label" style="margin-top:20px">🎁 ごほうび交換</div>
 <div class="bag-section">
@@ -756,6 +780,12 @@ var REWARDS = [
   { id:'r3', name:'好きな動画を1本', icon:'📺', cost:80  },
   { id:'r4', name:'おやつ選び放題',  icon:'🍬', cost:120 }
 ];
+// 大きな目標：ごほうび交換とは別のポイント(state.goalPts)が対象。
+// 毎日のタスク達成分がそのまま積み上がり、小さいごほうびに使っても減らない「貯金」。
+// 複数設定した場合は同じ貯金額に対する通過点(マイルストーン)として扱われる。
+var GOALS = [
+  { id:'g1', name:'MacBook', icon:'💻', cost:12600 }
+];
 
 var STORAGE_KEY          = 'mqState_v2';
 var BACKUP_META_KEY      = 'mqLastBackup';        // 最後にバックアップした日時を保存
@@ -784,9 +814,9 @@ function fmtDateTime(iso) {
 
 // ── State ──
 function defaultState() {
-  return { version:2, done:{}, bagPacked:{}, totalPts:0, spendablePts:0,
+  return { version:2, done:{}, bagPacked:{}, totalPts:0, spendablePts:0, goalPts:0,
            completedDates:{}, streak:0, lastDate:todayKey(),
-           soundMuted:false, soundVolPct:70, taskTimes:{} };
+           soundMuted:false, soundVolPct:70, taskTimes:{}, goalsAchieved:{} };
 }
 function loadState() {
   var raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('mqState');
@@ -798,12 +828,14 @@ function loadState() {
       bagPacked:      s.bagPacked      || {},
       totalPts:       Number(s.totalPts     || 0),
       spendablePts:   Number(s.spendablePts || 0),
+      goalPts:        Number(s.goalPts      || 0),
       completedDates: s.completedDates || {},
       streak:         Number(s.streak    || 0),
       lastDate:       s.lastDate       || todayKey(),
       soundMuted:     !!s.soundMuted,
       soundVolPct:    Number(s.soundVolPct || 70),
-      taskTimes:      s.taskTimes      || {}
+      taskTimes:      s.taskTimes      || {},
+      goalsAchieved:  s.goalsAchieved  || {}
     };
   } catch(e) { return defaultState(); }
 }
@@ -900,6 +932,7 @@ var DOM = {
   restoreBanner:    document.getElementById('restoreBanner'),
   restoreBannerSub: document.getElementById('restoreBannerSub'),
   rankName:         document.getElementById('rankName'),
+  goalList:         document.getElementById('goalList'),
   rewardList:       document.getElementById('rewardList'),
   walletPts:        document.getElementById('walletPts'),
   historyBox:       document.getElementById('historyBox'),
@@ -993,6 +1026,39 @@ function redeemReward(r) {
   renderRewards();
   showNotice({emoji:r.icon, title:'交換した！', message:r.name+'と交換しました。\nおうちの人に見せてね！'});
 }
+// 大きな目標：ごほうび交換と違い state.goalPts は毎日のタスク達成でそのまま積み上がり、
+// 小さいごほうびに交換しても減らない。GOALSは同じ貯金額への通過点（マイルストーン）。
+function renderGoals() {
+  var list=DOM.goalList; if(!list) return; list.innerHTML='';
+  var pts=state.goalPts||0;
+  GOALS.forEach(function(g){
+    var achieved = pts >= g.cost;
+    var pct = Math.min(100, Math.round(pts/g.cost*100));
+    var div=el('div'); div.className='goal-card'+(achieved?' achieved':'');
+    var head=el('div'); head.className='goal-head';
+    var ico=el('span'); ico.className='goal-icon'; ico.textContent=g.icon;
+    var nm=el('div'); nm.className='goal-name'; nm.textContent=g.name;
+    var amt=el('div'); amt.className='goal-amt'; amt.textContent=(achieved?g.cost:pts).toLocaleString()+' / '+g.cost.toLocaleString()+' pts';
+    head.appendChild(ico); head.appendChild(nm); head.appendChild(amt);
+    var track=el('div'); track.className='goal-track';
+    var fill=el('div'); fill.className='goal-fill'; fill.style.width=pct+'%';
+    track.appendChild(fill);
+    div.appendChild(head); div.appendChild(track);
+    if(achieved){ var badge=el('div'); badge.className='goal-badge'; badge.textContent='🎉 達成！'; div.appendChild(badge); }
+    list.appendChild(div);
+  });
+}
+function checkGoals() {
+  var pts=state.goalPts||0, newlyAchieved=false;
+  GOALS.forEach(function(g){
+    if(pts>=g.cost && !state.goalsAchieved[g.id]){
+      state.goalsAchieved[g.id]=true; newlyAchieved=true;
+      launchConfetti();
+      showNotice({emoji:g.icon, title:'目標達成！', message:g.name+'の貯金が目標の'+g.cost.toLocaleString()+'ptsに届いたよ！\nおうちの人と約束を確認しよう。'});
+    }
+  });
+  if(newlyAchieved){ saveState(); playFanfare(); vibrate([40,60,40,60,80]); renderGoals(); }
+}
 function renderCalendar() {
   var cal=DOM.calendar; cal.innerHTML='';
   var now=new Date(), y=now.getFullYear(), m=now.getMonth();
@@ -1057,9 +1123,10 @@ function toggleTask(t) {
     showNotice({emoji:'😊', title:'もう完了してるよ', message:t.name+'は今日もうクリア済みです。'});
     return;
   }
-  state.done[t.id]=true; state.totalPts=(state.totalPts||0)+t.pts; state.spendablePts=(state.spendablePts||0)+t.pts; saveState();
-  playClear(); vibrate(30); renderTasks(); renderProgress(); renderRewards(); updateTimerWithSound();
+  state.done[t.id]=true; state.totalPts=(state.totalPts||0)+t.pts; state.spendablePts=(state.spendablePts||0)+t.pts; state.goalPts=(state.goalPts||0)+t.pts; saveState();
+  playClear(); vibrate(30); renderTasks(); renderProgress(); renderRewards(); renderGoals(); updateTimerWithSound();
   showPopup(t.icon,t.name,t.pts,t.msgs[Math.floor(Math.random()*t.msgs.length)]);
+  checkGoals();
   if(getDoneCount()===TASKS.length) setTimeout(function(){playFanfare();vibrate([40,60,40]);showComplete();},1800);
 }
 function toggleBag(b) {
@@ -1200,11 +1267,13 @@ function importData(event) {
         completedDates: imported.completedDates  ||{},
         totalPts:       Number(imported.totalPts     ||0),
         spendablePts:   Number(imported.spendablePts ||0),
+        goalPts:        Number(imported.goalPts      ||0),
         streak:         Number(imported.streak     ||0),
         lastDate:       imported.lastDate        ||todayKey(),
         soundMuted:     !!imported.soundMuted,
         soundVolPct:    Number(imported.soundVolPct||70),
-        taskTimes:      imported.taskTimes       ||{}
+        taskTimes:      imported.taskTimes       ||{},
+        goalsAchieved:  imported.goalsAchieved   ||{}
       };
       // 古い日のバックアップでも今日分は空に
       if(state.lastDate!==todayKey()){
@@ -1213,7 +1282,7 @@ function importData(event) {
       // バックアップ日時を更新
       localStorage.setItem(BACKUP_META_KEY, new Date().toISOString());
       saveState();
-      renderTasks(); renderBag(); renderProgress(); renderRewards(); updateTimerWithSound();
+      renderTasks(); renderBag(); renderProgress(); renderRewards(); renderGoals(); updateTimerWithSound();
       hideRestoreBanner();
       DOM.backupRemindBanner.style.display = 'none';
       showNotice({emoji:'📂',title:'復元しました！',
@@ -1227,14 +1296,14 @@ function importData(event) {
 }
 
 function confirmResetAll() {
-  if(!confirm('累計ポイント・連続日数・今日の進捗をすべて消します。よろしいですか？')) return;
+  if(!confirm('累計ポイント・連続日数・今日の進捗・大きな目標の貯金をすべて消します。よろしいですか？')) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('mqState');
   localStorage.removeItem(BACKUP_META_KEY);
   localStorage.removeItem(INSTALL_DISMISS_KEY);
   localStorage.removeItem(BACKUP_REMIND_KEY);
   state=defaultState(); saveState();
-  renderTasks(); renderBag(); renderProgress(); renderRewards(); updateTimerWithSound();
+  renderTasks(); renderBag(); renderProgress(); renderRewards(); renderGoals(); updateTimerWithSound();
   showNotice({emoji:'🧹',title:'リセットしました',message:'全データを消去しました。'});
 }
 
@@ -1480,6 +1549,7 @@ renderTasks();
 renderBag();
 renderProgress();
 renderRewards();
+renderGoals();
 updateTimer();
 setInterval(updateTimerWithSound, 1000);
 addSoundToggle();
